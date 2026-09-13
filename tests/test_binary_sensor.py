@@ -11,6 +11,7 @@ from myPyllant.tests.generate_test_data import DATA_DIR
 from myPyllant.tests.utils import list_test_data, load_test_data
 
 from custom_components.mypyllant.binary_sensor import (
+    AmbisenseDeviceLowBattery,
     CircuitIsCoolingAllowed,
     ControlError,
     ControlOnline,
@@ -46,6 +47,28 @@ async def test_async_setup_binary_sensors(
         await async_setup_entry(hass, config_entry, mock)
         mock.assert_called_once()
         assert len(mock.call_args.args[0]) > 0
+
+        await mocked_api.aiohttp_session.close()
+
+
+async def test_ambisense_device_info_includes_model(
+    mypyllant_aioresponses,
+    mocked_api: MyPyllantAPI,
+    system_coordinator_mock: SystemCoordinator,
+):
+    test_data = load_test_data(DATA_DIR / "ambisense")
+    with mypyllant_aioresponses(test_data) as _:
+        system_coordinator_mock.data = (
+            await system_coordinator_mock._async_update_data()
+        )
+        device = (
+            system_coordinator_mock.data[0]
+            .ambisense_rooms[0]
+            .room_configuration.devices[0]
+        )
+        entity = AmbisenseDeviceLowBattery(0, 0, device, system_coordinator_mock)
+
+        assert entity.device_info["model"] == device.device_type
 
         await mocked_api.aiohttp_session.close()
 

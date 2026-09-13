@@ -408,6 +408,15 @@ class AmbisenseDeviceCoordinatorEntity(AmbisenseCoordinatorEntity):
         self.device = device
 
     @property
+    def device_info(self) -> DeviceInfo:
+        return DeviceInfo(
+            identifiers={(DOMAIN, self.id_infix)},
+            name=self.name_prefix,
+            manufacturer=self.system.brand_name,
+            model=self.device.device_type,
+        )
+
+    @property
     def name_prefix(self) -> str:
         return f"{self.system.home.home_name or self.system.home.nomenclature} {self.device.name}"
 
